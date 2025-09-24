@@ -1,0 +1,20 @@
+<svg width="48" height="48" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Folder back -->
+  <path d="M80 50C52.3858 50 30 72.3858 30 100V320C30 347.614 52.3858 370 80 370H180L200 400H432C459.614 400 482 377.614 482 350V120C482 92.3858 459.614 70 432 70H220L200 40H80Z" fill="#9A6B47"/>
+
+  <!-- Folder main body -->
+  <path d="M80 80C52.3858 80 30 102.386 30 130V390C30 417.614 52.3858 440 80 440H432C459.614 440 482 417.614 482 390V150C482 122.386 459.614 100 432 100H220L200 80H80Z" fill="#C08B67"/>
+
+  <!-- Folder front face -->
+  <rect x="30" y="180" width="452" height="260" rx="20" fill="#C4956F"/>
+
+  <!-- Subtle gradient overlay for depth -->
+  <path d="M30 200C30 187.297 40.2975 177 53 177H459C471.703 177 482 187.297 482 200V420C482 432.703 471.703 443 459 443H53C40.2975 443 30 432.703 30 420V200Z" fill="url(#folderGradient)"/>
+
+  <defs>
+    <linearGradient id="folderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A684;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#A67856;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+</svg>

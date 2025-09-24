@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  /* Dark theme by default (Gruvbox inspired) */
+  --bg: #282828;
+  --surface: #3c3836;
+  --border: #665c54;
+  --text: #ebdbb2;
+  --muted: #a89984;
+  --primary: #E46E55;
+}
+
+:root.light {
+  /* Light theme (Gruvbox inspired) */
+  --bg: #fbf1c7;
+  --surface: #f9f5d7;
+  --border: #d5c4a1;
+  --text: #3c3836;
+  --muted: #7c6f64;
+  --primary: #E46E55;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  /* Editorial type scale matching Anthropic's academic aesthetic */
+  --step--2: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);
+  --step--1: clamp(0.875rem, 0.85rem + 0.125vw, 0.9375rem);
+  --step-0:  clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --step-1:  clamp(1.125rem, 1.075rem + 0.25vw, 1.25rem);
+  --step-2:  clamp(1.25rem, 1.175rem + 0.375vw, 1.5rem);
+  --step-3:  clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+  --step-4:  clamp(1.875rem, 1.65rem + 1.125vw, 2.5rem);
+  
+  /* Editorial spacing and leading for thoughtful reading */
+  --content-width: clamp(45ch, 50vw, 75ch);
+  --reading-measure: clamp(45ch, 65ch, 75ch);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  user-select: none;
+}
+
+/* Headings: Clean, structured, authoritative */
+h1,h2,h3,h4,.ui {
+  font-family: var(--font-styrene);
+  letter-spacing: var(--tw-letter-spacing, -0.015em);
+  line-height: 1.2;
+  font-weight: 500;
+  margin-bottom: 0.75em;
+}
+
+h1 { font-weight: 500; }
+h2 { font-weight: 500; }
+h3 { font-weight: 500; }
+
+/* Body text: Thoughtful, readable, editorial */
+p,li,blockquote,article {
+  font-family: var(--font-tiempos);
+  line-height: 1.65;
+  font-weight: 400;
+  max-width: var(--reading-measure);
+}
+
+/* Enhanced readability for long-form content */
+p + p {
+  margin-top: 1.25em;
+}
+
+/* Academic/editorial emphasis */
+blockquote, .editorial {
+  font-family: var(--font-tiempos);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+/* Navigation and UI: Clear, functional */
+nav, button, .ui, .interface {
+  font-family: var(--font-styrene);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
