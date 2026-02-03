@@ -77,11 +77,7 @@ export async function executeMCPTool(
 
     case 'search_workshops': {
       return {
-        workshops: [
-          { title: 'Intro to Claude API', date: '2024-02-15', status: 'upcoming' },
-          { title: 'Building with MCP', date: '2024-02-22', status: 'upcoming' },
-          { title: 'Prompt Engineering Workshop', date: '2024-01-20', status: 'past' },
-        ],
+        message: 'No specific workshops are currently scheduled. Please check our Discord or Instagram for upcoming events and announcements.',
       };
     }
 

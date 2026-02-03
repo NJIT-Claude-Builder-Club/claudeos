@@ -83,11 +83,11 @@ export function Message({ message }: MessageProps) {
 
             <div className="text-text leading-relaxed prose prose-invert max-w-none">
               <ReactMarkdown>{message.content}</ReactMarkdown>
-
-              {message.isStreaming && (
-                <span className="inline-block w-1.5 h-5 ml-1 bg-primary animate-pulse" />
-              )}
             </div>
+
+            {message.isStreaming && (
+              <span className="inline-block w-1.5 h-5 ml-1 bg-primary animate-pulse" />
+            )}
 
             {/* Action Buttons */}
             {!message.isStreaming && (
