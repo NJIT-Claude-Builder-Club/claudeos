@@ -3,7 +3,7 @@ import "./globals.css";
 import { tiempos, styrene } from "./fonts";
 
 export const metadata: Metadata = {
-  title: "Claude Chat Simulator - Claude Builder Club @ NJIT",
+  title: "Claude @ NJIT",
   description: "An interactive chat simulator for exploring Claude's capabilities with real-time streaming and MCP tool integration. Built by the Claude Builder Club at NJIT.",
   icons: {
     icon: "/claude-ai.png",
