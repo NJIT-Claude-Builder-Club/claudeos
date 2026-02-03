@@ -1,6 +1,8 @@
 // MCP Tool definitions for Claude chat
 // You can add your custom MCP tools here
 
+import { getAllMCPTools, executeMCPServerTool } from './mcp-client';
+
 export interface MCPTool {
   name: string;
   description: string;
@@ -63,11 +65,28 @@ export const DEFAULT_MCP_TOOLS: MCPTool[] = [
   },
 ];
 
-// Mock tool execution - replace with actual implementations
+// Get all available tools (built-in + MCP server tools)
+export async function getAllTools(): Promise<MCPTool[]> {
+  const mcpServerTools = await getAllMCPTools();
+  return [...DEFAULT_MCP_TOOLS, ...mcpServerTools];
+}
+
+// Execute a tool (built-in or MCP server tool)
 export async function executeMCPTool(
   toolName: string,
   toolInput: Record<string, unknown>
 ): Promise<unknown> {
+  // Check if this is an MCP server tool (format: servername_toolname)
+  if (toolName.includes('_') && !['get_club_info', 'search_workshops'].includes(toolName)) {
+    try {
+      return await executeMCPServerTool(toolName, toolInput);
+    } catch (error) {
+      console.error(`Error executing MCP server tool ${toolName}:`, error);
+      return { error: `Failed to execute tool: ${error}` };
+    }
+  }
+
+  // Built-in tools
   switch (toolName) {
     case 'get_club_info': {
       const infoType = toolInput.info_type as string;

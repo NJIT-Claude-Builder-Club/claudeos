@@ -102,6 +102,7 @@ export function ChatInterface() {
 
       let assistantMessageId: string | null = null;
       let currentContent = '';
+      let toolsUsed: Array<{ name: string; input: unknown; result?: unknown }> = [];
 
       while (true) {
         const { done, value } = await reader.read();
@@ -121,6 +122,7 @@ export function ChatInterface() {
                   role: 'assistant',
                   content: '',
                   isStreaming: true,
+                  toolsUsed: [],
                 });
               } else if (data.type === 'content_block_delta') {
                 if (data.delta?.type === 'text_delta') {
@@ -132,12 +134,38 @@ export function ChatInterface() {
                     });
                   }
                 }
+              } else if (data.type === 'tool_use') {
+                // Claude is using a tool
+                const toolUse = data.tool_use;
+                toolsUsed.push({
+                  name: toolUse.name,
+                  input: toolUse.input,
+                });
+                if (assistantMessageId) {
+                  updateMessage(assistantMessageId, {
+                    toolsUsed: [...toolsUsed],
+                  });
+                }
+              } else if (data.type === 'tool_result') {
+                // Tool execution result
+                const lastTool = toolsUsed[toolsUsed.length - 1];
+                if (lastTool) {
+                  lastTool.result = data.result;
+                  if (assistantMessageId) {
+                    updateMessage(assistantMessageId, {
+                      toolsUsed: [...toolsUsed],
+                    });
+                  }
+                }
               } else if (data.type === 'message_stop') {
                 if (assistantMessageId) {
                   updateMessage(assistantMessageId, {
                     isStreaming: false,
                   });
                 }
+                // Reset for next iteration
+                currentContent = '';
+                toolsUsed = [];
               }
             } catch (e) {
               console.error('Error parsing event:', e);

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Message as MessageType } from '@/lib/chat-store';
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw, User } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, RotateCcw, User, Wrench } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MessageProps {
@@ -48,6 +48,39 @@ export function Message({ message }: MessageProps) {
 
           {/* Assistant Message */}
           <div className="flex-1 min-w-0">
+            {/* Tool Usage Display */}
+            {message.toolsUsed && message.toolsUsed.length > 0 && (
+              <div className="mb-4 space-y-2">
+                {message.toolsUsed.map((tool, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-surface/30 border border-border/20 rounded-lg p-3"
+                  >
+                    <div className="flex items-center gap-2 text-sm text-primary mb-2">
+                      <Wrench className="w-4 h-4" />
+                      <span className="font-medium">Using tool: {tool.name}</span>
+                    </div>
+                    <div className="text-xs text-muted space-y-1">
+                      <div>
+                        <span className="text-muted/70">Input:</span>
+                        <pre className="mt-1 bg-bg/50 rounded p-2 overflow-x-auto">
+                          {JSON.stringify(tool.input, null, 2)}
+                        </pre>
+                      </div>
+                      {tool.result && (
+                        <div className="mt-2">
+                          <span className="text-muted/70">Result:</span>
+                          <pre className="mt-1 bg-bg/50 rounded p-2 overflow-x-auto">
+                            {JSON.stringify(tool.result, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="text-text leading-relaxed prose prose-invert max-w-none">
               <ReactMarkdown>{message.content}</ReactMarkdown>
 

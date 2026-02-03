@@ -18,6 +18,7 @@ export interface Message {
   timestamp: Date;
   toolUses?: ToolUse[];
   toolResults?: ToolResult[];
+  toolsUsed?: Array<{ name: string; input: unknown; result?: unknown }>;
   isStreaming?: boolean;
 }
 
