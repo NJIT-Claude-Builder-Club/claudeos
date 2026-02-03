@@ -50,7 +50,7 @@ export function Message({ message }: MessageProps) {
           <div className="flex-1 min-w-0">
             {/* Tool Usage Display */}
             {message.toolsUsed && message.toolsUsed.length > 0 && (
-              <div className="mb-4 space-y-2">
+              <div className="mb-3 space-y-2">
                 {message.toolsUsed.map((tool, idx) => (
                   <div
                     key={idx}
@@ -83,11 +83,10 @@ export function Message({ message }: MessageProps) {
 
             <div className="text-text leading-relaxed prose prose-invert max-w-none">
               <ReactMarkdown>{message.content}</ReactMarkdown>
+              {message.isStreaming && message.content && (
+                <span className="inline-block w-1.5 h-5 ml-1 bg-primary animate-pulse align-middle" />
+              )}
             </div>
-
-            {message.isStreaming && (
-              <span className="inline-block w-1.5 h-5 ml-1 bg-primary animate-pulse" />
-            )}
 
             {/* Action Buttons */}
             {!message.isStreaming && (
