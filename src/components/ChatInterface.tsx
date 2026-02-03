@@ -118,12 +118,16 @@ export function ChatInterface() {
 
               // Handle different event types
               if (data.type === 'message_start') {
-                assistantMessageId = addMessage({
-                  role: 'assistant',
-                  content: '',
-                  isStreaming: true,
-                  toolsUsed: [],
-                });
+                // Only create a new message if we don't have one yet
+                // (prevents duplicate messages when tools are used)
+                if (!assistantMessageId) {
+                  assistantMessageId = addMessage({
+                    role: 'assistant',
+                    content: '',
+                    isStreaming: true,
+                    toolsUsed: [],
+                  });
+                }
               } else if (data.type === 'content_block_delta') {
                 if (data.delta?.type === 'text_delta') {
                   currentContent += data.delta.text;
