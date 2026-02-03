@@ -105,7 +105,10 @@ export async function POST(req: NextRequest) {
               const toolResults = [];
               for (const toolBlock of toolUseBlocks) {
                 if (toolBlock.type === 'tool_use') {
-                  const result = await executeMCPTool(toolBlock.name, toolBlock.input);
+                  const result = await executeMCPTool(
+                    toolBlock.name,
+                    toolBlock.input as Record<string, unknown>
+                  );
                   toolResults.push({
                     type: 'tool_result' as const,
                     tool_use_id: toolBlock.id,

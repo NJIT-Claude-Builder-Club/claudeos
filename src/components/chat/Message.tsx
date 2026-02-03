@@ -67,7 +67,7 @@ export function Message({ message }: MessageProps) {
                           {JSON.stringify(tool.input, null, 2)}
                         </pre>
                       </div>
-                      {tool.result && (
+                      {tool.result !== undefined && (
                         <div className="mt-2">
                           <span className="text-muted/70">Result:</span>
                           <pre className="mt-1 bg-bg/50 rounded p-2 overflow-x-auto">

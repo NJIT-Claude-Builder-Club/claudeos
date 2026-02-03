@@ -1,13 +1,11 @@
 // MCP Tool definitions for Claude chat
 // You can add your custom MCP tools here
 
-import { getAllMCPTools, executeMCPServerTool } from './mcp-client';
-
 export interface MCPTool {
   name: string;
   description: string;
   input_schema: {
-    type: string;
+    type: 'object';
     properties: Record<string, unknown>;
     required?: string[];
   };
@@ -49,26 +47,13 @@ export const DEFAULT_MCP_TOOLS: MCPTool[] = [
       required: ['query'],
     },
   },
-  {
-    name: 'calculator',
-    description: 'Perform basic mathematical calculations',
-    input_schema: {
-      type: 'object',
-      properties: {
-        expression: {
-          type: 'string',
-          description: 'Mathematical expression to evaluate',
-        },
-      },
-      required: ['expression'],
-    },
-  },
 ];
 
 // Get all available tools (built-in + MCP server tools)
 export async function getAllTools(): Promise<MCPTool[]> {
-  const mcpServerTools = await getAllMCPTools();
-  return [...DEFAULT_MCP_TOOLS, ...mcpServerTools];
+  // In Edge runtime, only return built-in tools
+  // For Node.js runtime with MCP servers, uncomment the import and implementation
+  return DEFAULT_MCP_TOOLS;
 }
 
 // Execute a tool (built-in or MCP server tool)
@@ -76,16 +61,6 @@ export async function executeMCPTool(
   toolName: string,
   toolInput: Record<string, unknown>
 ): Promise<unknown> {
-  // Check if this is an MCP server tool (format: servername_toolname)
-  if (toolName.includes('_') && !['get_club_info', 'search_workshops'].includes(toolName)) {
-    try {
-      return await executeMCPServerTool(toolName, toolInput);
-    } catch (error) {
-      console.error(`Error executing MCP server tool ${toolName}:`, error);
-      return { error: `Failed to execute tool: ${error}` };
-    }
-  }
-
   // Built-in tools
   switch (toolName) {
     case 'get_club_info': {
@@ -108,17 +83,6 @@ export async function executeMCPTool(
           { title: 'Prompt Engineering Workshop', date: '2024-01-20', status: 'past' },
         ],
       };
-    }
-
-    case 'calculator': {
-      const expression = toolInput.expression as string;
-      try {
-        // Simple eval - in production, use a safe math parser
-        const result = eval(expression);
-        return { result };
-      } catch {
-        return { error: 'Invalid expression' };
-      }
     }
 
     default:
