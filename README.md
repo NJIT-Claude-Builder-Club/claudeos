@@ -1,22 +1,26 @@
-# ClaudeOS - Claude Builder Club @ NJIT Website
+# Claude Chat Simulator - Claude Builder Club @ NJIT
 
-A desktop-style website for the Claude Builder Club @ NJIT, built with Next.js and designed to look like a simple operating system interface.
+An interactive Claude chat simulator for the Claude Builder Club @ NJIT, built with Next.js, featuring real-time streaming responses and MCP (Model Context Protocol) tool integration.
 
 ## 🎯 Project Overview
 
-ClaudeOS is a creative website that simulates a desktop environment where visitors can click on folder icons to open windows containing different sections about the club. The design features:
+The Claude Chat Simulator provides an immersive experience for exploring Claude's capabilities with:
 
-- **Desktop metaphor** with draggable folder icons
-- **Windows** that can be opened, closed, minimized, and dragged around
-- **Responsive design** that switches to a mobile-friendly interface on small screens
-- **Theme switching** between light and dark modes
+- **Real-time streaming responses** from Claude API
+- **MCP tool integration** for extended functionality
+- **Beautiful chat interface** with message history
+- **Tool usage visualization** showing when Claude uses tools
+- **Responsive design** that works on all devices
+- **Auto-login animation** for smooth onboarding
 - **Custom orange accent color** (#E46E55) with Gruvbox-inspired palette
 
 ## 🚀 Tech Stack
 
-- **Framework**: Next.js 14 with TypeScript
+- **Framework**: Next.js 15 with TypeScript
+- **AI**: Anthropic Claude API with streaming support
+- **MCP**: Model Context Protocol SDK for tool integration
 - **Styling**: Tailwind CSS v4 with custom CSS variables
-- **State Management**: Zustand for window management
+- **State Management**: Zustand for chat management
 - **Fonts**: EB Garamond (headings) and Inter (body text)
 - **Icons**: Lucide React
 - **Deployment**: Vercel
@@ -24,10 +28,29 @@ ClaudeOS is a creative website that simulates a desktop environment where visito
 ## 🛠️ Development
 
 ### Setup
+
+1. **Clone and install dependencies:**
 ```bash
 npm install
+```
+
+2. **Configure your API key:**
+Create a `.env.local` file in the root directory:
+```bash
+ANTHROPIC_API_KEY=your-api-key-here
+```
+
+To get an API key:
+- Sign up at [console.anthropic.com](https://console.anthropic.com/)
+- Navigate to API Keys section
+- Generate a new key and copy it to your `.env.local` file
+
+3. **Start the development server:**
+```bash
 npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000) to see the chat simulator.
 
 ### Scripts
 - `npm run dev` - Start development server
@@ -35,27 +58,39 @@ npm run dev
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
 ## 🏗️ Architecture
 
-### Window Management System
-The core of the application is built around a Zustand store that manages:
-- Window z-order and focus states
-- Window positions and drag operations
-- Minimization and restoration
-- Persistent state across sessions
+### Chat Management System
+The application uses Zustand for state management and handles:
+- Message history with user and assistant roles
+- Streaming responses with real-time updates
+- Tool usage tracking and visualization
+- Message timestamps and metadata
 
 ### Component Structure
 ```
-src/components/
-├── Desktop.tsx          # Main desktop container with responsive detection
-├── MobileDesktop.tsx    # Mobile-specific interface
-├── Window.tsx           # Draggable window component
-├── FolderIcon.tsx       # Draggable desktop icons
-├── Taskbar.tsx          # Bottom taskbar with controls
-└── pages/              # Page content components
+src/
+├── app/
+│   ├── api/chat/route.ts    # Claude API streaming endpoint
+│   └── page.tsx              # Main page with login flow
+├── components/
+│   ├── ChatInterface.tsx     # Main chat container
+│   ├── LoginScreen.tsx       # Auto-login animation
+│   └── chat/
+│       ├── Message.tsx       # Individual message component
+│       ├── MessageList.tsx   # Scrollable message container
+│       └── ChatInput.tsx     # Message input with send button
+└── lib/
+    ├── chat-store.ts         # Zustand store for chat state
+    └── mcp-tools.ts          # MCP tool definitions
 ```
+
+### API Route
+The `/api/chat` endpoint:
+- Uses Edge Runtime for optimal performance
+- Streams responses from Claude API
+- Handles tool calling and execution
+- Returns Server-Sent Events (SSE) for real-time updates
 
 ## 🎨 Design System
 
@@ -68,17 +103,53 @@ src/components/
 - **Headings**: EB Garamond (serif)
 - **Body text**: Inter (sans-serif)
 
-## 🗂️ Content Sections
+## 🔧 MCP Tools
 
-1. **About**: Club introduction, mission, and social links
-2. **E-Board**: Executive board member grid (loaded from JSON)
-3. **Feed**: Instagram integration and recent updates
-4. **Workshops**: Upcoming events and learning resources
-5. **Contact**: Contact information and meeting details
+The chat simulator includes built-in MCP tools that Claude can use:
 
-## 📱 Mobile Experience
+1. **get_club_info**: Retrieve information about the Claude Builder Club
+   - Supports: about, eboard, workshops, events, contact
 
-On mobile devices, the interface automatically switches to a card-based layout with full-screen page views and touch-optimized interactions.
+2. **search_workshops**: Search for club workshops and events
+   - Filter by: upcoming, past, or all events
+
+3. **calculator**: Perform mathematical calculations
+   - Evaluate mathematical expressions safely
+
+### Adding Custom Tools
+
+Edit `src/lib/mcp-tools.ts` to add your own tools:
+
+```typescript
+export const DEFAULT_MCP_TOOLS: MCPTool[] = [
+  {
+    name: 'your_tool_name',
+    description: 'What your tool does',
+    input_schema: {
+      type: 'object',
+      properties: {
+        // Define your parameters here
+      },
+      required: ['param1'],
+    },
+  },
+];
+```
+
+Then implement the tool execution in `executeMCPTool()`.
+
+## 📱 Features
+
+- **Streaming Responses**: See Claude's responses appear in real-time
+- **Tool Usage Display**: Visual indicators when Claude uses tools
+- **Message History**: Full conversation history with timestamps
+- **Clear Chat**: Reset conversation at any time
+- **Settings Panel**: View enabled MCP tools
+- **Responsive Design**: Works seamlessly on desktop and mobile
+- **Keyboard Shortcuts**:
+  - Enter to send message
+  - Shift+Enter for new line
+  - Ctrl+Shift+L to logout (for testing)
 
 ## 🚀 Deploy on Vercel
 

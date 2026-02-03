@@ -21,7 +21,7 @@ export function LoginScreen({ onLoginComplete }: LoginScreenProps) {
     }
   }, []);
 
-  const targetPassword = 'ClaudeOS2024';
+  const targetPassword = 'ClaudeChat2024';
   const typingSpeed = 120; // ms between characters
 
   // Cursor blinking effect
@@ -82,19 +82,13 @@ export function LoginScreen({ onLoginComplete }: LoginScreenProps) {
 
       {/* Login container */}
       <div className="relative z-10 bg-surface border border-border rounded-lg p-8 w-96 shadow-2xl">
-        {/* Profile Picture */}
+        {/* Chat Icon */}
         <div className="text-center mb-8">
-          <svg
-            width="64"
-            height="64"
-            viewBox="0 0 64 64"
-            className="mx-auto mb-4"
-            fill="none"
-          >
-            <circle cx="32" cy="32" r="30" fill="var(--bg)" stroke="var(--border)" strokeWidth="2"/>
-            <circle cx="32" cy="24" r="8" fill="var(--text)"/>
-            <path d="M16 50c0-8.837 7.163-16 16-16s16 7.163 16 16" fill="var(--text)"/>
-          </svg>
+          <div className="w-20 h-20 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+            <span className="text-4xl">💬</span>
+          </div>
+          <h2 className="text-xl font-semibold text-text mb-1">Claude Chat Simulator</h2>
+          <p className="text-sm text-muted">Claude Builder Club @ NJIT</p>
         </div>
 
         {/* Login form */}

@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark theme by default (Gruvbox inspired) */
-  --bg: #282828;
-  --surface: #3c3836;
-  --border: #665c54;
-  --text: #ebdbb2;
-  --muted: #a89984;
-  --primary: #E46E55;
+  /* Dark theme matching Claude.ai */
+  --bg: #1a1a1a;
+  --surface: #2d2d2d;
+  --border: #404040;
+  --text: #e8e8e8;
+  --muted: #9ca3af;
+  --primary: #cc7a59;
+  --user-bg: #3a3a3a;
 }
 
 :root.light {
@@ -27,6 +28,7 @@
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-primary: var(--primary);
+  --color-user-bg: var(--user-bg);
   /* Editorial type scale matching Anthropic's academic aesthetic */
   --step--2: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);
   --step--1: clamp(0.875rem, 0.85rem + 0.125vw, 0.9375rem);
@@ -60,9 +62,9 @@ html, body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.5;
-  user-select: none;
+  font-size: 15px;
+  line-height: 1.6;
+  user-select: text;
 }
 
 /* Headings: Clean, structured, authoritative */

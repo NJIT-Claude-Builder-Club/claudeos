@@ -45,9 +45,61 @@ const config: Config = {
         window: '0 10px 30px rgba(0,0,0,0.15)',
         'window-dark': '0 10px 30px rgba(0,0,0,0.5)',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            color: 'inherit',
+            p: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            strong: {
+              color: 'inherit',
+              fontWeight: '600',
+            },
+            code: {
+              color: 'inherit',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              padding: '0.2em 0.4em',
+              borderRadius: '0.25rem',
+              fontWeight: '400',
+            },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
+            pre: {
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              color: 'inherit',
+            },
+            a: {
+              color: '#cc7a59',
+              textDecoration: 'underline',
+              '&:hover': {
+                color: '#d88b6f',
+              },
+            },
+            ul: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            ol: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            li: {
+              marginTop: '0.25em',
+              marginBottom: '0.25em',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
 };
 
 export default config;
