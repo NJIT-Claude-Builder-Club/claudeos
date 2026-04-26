@@ -43,6 +43,17 @@
   --reading-measure: clamp(45ch, 65ch, 75ch);
 }
 
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 * {
   box-sizing: border-box;
 }

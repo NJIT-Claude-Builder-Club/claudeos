@@ -28,8 +28,8 @@ export function MessageList() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {messages.map((message) => (
-        <Message key={message.id} message={message} />
+      {messages.map((message, i) => (
+        <Message key={message.id} message={message} isLast={i === messages.length - 1} />
       ))}
       <div ref={messagesEndRef} />
     </div>

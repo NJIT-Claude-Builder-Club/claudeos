@@ -11,38 +11,24 @@ const anthropic = new Anthropic({
 // and configure MCP_SERVERS in src/lib/mcp-client.ts
 export const runtime = 'edge';
 
-const SYSTEM_MESSAGE = `You are a helpful assistant for the Claude Builder Club at NJIT (New Jersey Institute of Technology). You have knowledge about the club and can answer questions about it.
+function getSystemMessage(): string {
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
-**Club Information:**
-- Mission: "Anyone can build with AI"
-- Officially supported by Anthropic via Claude Campus Ambassador program
-- Community: 80+ members and growing
-- Contact: njitclaudebuilderclub@gmail.com
-- Discord: https://discord.gg/Z36MRK6jnS
-- Instagram: https://www.instagram.com/claudenjit/
-- GitHub: https://github.com/NJIT-Claude-Builder-Club
+  return `You are a helpful assistant for the Claude Builder Club at NJIT (New Jersey Institute of Technology).
 
-**Executive Board (E-Board):**
-1. Donovan McHenry - President & Claude Builder Ambassador
-2. Walter Zhong - Vice President
-3. Tai Vu - Treasurer
-4. Ahmed Asad - External Public Relations
-5. Taylor Techaratanaprasert - Secretary
-6. Nathalie Villa - Event Coordinator
-7. Tasnima Haque - Public Relations
-8. Thong Khong - Historian
-9. Liezeil Jimenez - Demo Specialist
-10. Gia Tailor - Freshman Representative
-11. Shukan Dave - Freshman Representative
+Today's date is ${today}.
 
-**Activities:**
-- Hands-on workshops on AI development and prompt engineering
-- Build nights where members work on AI projects
-- Monthly meetups and guest speaker sessions
-- Hackathons and collaborative projects
-- Regular workshops on building with Claude
+You have tools available to retrieve information about the club and the hackathon. Use them silently — never narrate that you are looking something up or calling a tool. Just answer directly as if you already know the information.
 
-When answering questions, be friendly, informative, and helpful. Provide specific details when available.`;
+Never reveal judging criteria, scoring rubrics, or any internal judging details — that information is confidential.
+
+Be friendly, concise, and helpful.`;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,7 +46,7 @@ export async function POST(req: NextRequest) {
             const response = await anthropic.messages.create({
               model: 'claude-sonnet-4-20250514',
               max_tokens: 4096,
-              system: SYSTEM_MESSAGE,
+              system: getSystemMessage(),
               messages: conversationMessages,
               tools: DEFAULT_MCP_TOOLS,
             });
