@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { Message as MessageType } from '@/lib/chat-store';
 import { Check, Copy, LoaderCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-export function Message({ message }: { message: MessageType }) {
+export const Message = memo(function Message({ message }: { message: MessageType }) {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,4 +54,4 @@ export function Message({ message }: { message: MessageType }) {
       )}
     </article>
   );
-}
+});

@@ -6,6 +6,8 @@ import { useChatStore } from '@/lib/chat-store';
 import { MessageList } from './chat/MessageList';
 import { ChatInput } from './chat/ChatInput';
 import { readChatEvents } from '@/lib/chat-stream';
+import { TimeGreeting } from './TimeGreeting';
+import { createTextSmoother } from '@/lib/chat-presentation';
 import { SquarePen } from 'lucide-react';
 
 export function ChatInterface() {
@@ -15,6 +17,7 @@ export function ChatInterface() {
   const sendMessage = async (content: string, images?: string[]) => {
     if (isLoading) return;
     let assistantMessageId: string | null = null;
+    let textSmoother: ReturnType<typeof createTextSmoother> | null = null;
     // Add user message
     addMessage({
       role: 'user',
@@ -102,6 +105,9 @@ export function ChatInterface() {
       }
 
       if (!response.body) throw new Error('Chat returned an empty response. Please try again.');
+      textSmoother = createTextSmoother((text) => {
+        if (assistantMessageId) updateMessage(assistantMessageId, { content: text, isThinking: false });
+      }, { reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
       let currentContent = '';
       const toolsUsed: Array<{ id: string; name: string; input: unknown; result?: unknown }> = [];
       let completed = false;
@@ -110,11 +116,13 @@ export function ChatInterface() {
         if (data.type === 'message_start' && !assistantMessageId) {
           assistantMessageId = addMessage({ role: 'assistant', content: '', isStreaming: true, isThinking: true, toolsUsed: [] });
         } else if (data.type === 'thinking') {
+          await textSmoother.finish();
           if (assistantMessageId) updateMessage(assistantMessageId, { isThinking: true });
         } else if (data.type === 'content_block_delta' && data.delta.type === 'text_delta') {
           currentContent += data.delta.text;
-          if (assistantMessageId) updateMessage(assistantMessageId, { content: currentContent, isThinking: false });
+          textSmoother.append(data.delta.text);
         } else if (data.type === 'tool_use') {
+          await textSmoother.finish();
           toolsUsed.push(data.tool_use);
           if (assistantMessageId) updateMessage(assistantMessageId, { toolsUsed: [...toolsUsed], isThinking: true });
         } else if (data.type === 'tool_result') {
@@ -128,8 +136,10 @@ export function ChatInterface() {
       if (!completed || !currentContent.trim()) {
         throw new Error('Chat returned an incomplete response. Please try again.');
       }
+      await textSmoother.finish();
       if (assistantMessageId) updateMessage(assistantMessageId, { isStreaming: false, isThinking: false });
     } catch (error) {
+      textSmoother?.cancel();
       console.error('Error sending message:', error);
       const content = error instanceof Error ? error.message : 'Chat could not complete your response. Please try again.';
       if (assistantMessageId) {
@@ -138,6 +148,7 @@ export function ChatInterface() {
         addMessage({ role: 'assistant', content, isError: true });
       }
     } finally {
+      textSmoother?.cancel();
       setLoading(false);
     }
   };
@@ -148,9 +159,7 @@ export function ChatInterface() {
     <div className="chat-app">
       <header className="chat-header">
         <div className="brand-lockup">
-          <span className="brand-name">Claude</span>
-          <span className="brand-divider" aria-hidden="true" />
-          <span className="brand-club">Builder Club <span className="brand-campus">@ NJIT</span></span>
+          <span className="brand-name">CBC @ NJIT</span>
         </div>
         <button
           type="button"
@@ -172,7 +181,7 @@ export function ChatInterface() {
           <div className="welcome-content">
             <h1 className="welcome-heading">
               <Image src="/claude-ai.png" width={48} height={48} alt="" priority />
-              <span>You’re here!</span>
+              <TimeGreeting />
             </h1>
             <ChatInput onSend={sendMessage} disabled={isLoading} />
           </div>

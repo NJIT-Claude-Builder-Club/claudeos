@@ -2,7 +2,7 @@
 
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { ArrowUp, Plus, X, MessageCircle } from 'lucide-react';
+import { ArrowUp, Plus, X } from 'lucide-react';
 
 interface ChatInputProps {
   onSend: (message: string, images?: string[]) => void;
@@ -136,7 +136,6 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           <button type="button" onClick={() => fileInputRef.current?.click()} disabled={disabled} className="composer-attach" title="Attach images" aria-label="Attach images">
             <Plus size={22} strokeWidth={1.7} aria-hidden="true" />
           </button>
-          <span className="chat-mode"><MessageCircle size={14} aria-hidden="true" /> Chat</span>
         </div>
         <div className="composer-send-tools">
           <span className="composer-model" aria-label="Model: Claude Sonnet 4.6">Sonnet 4.6</span>
