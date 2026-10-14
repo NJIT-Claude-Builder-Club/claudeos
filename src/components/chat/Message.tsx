@@ -1,95 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Message as MessageType } from '@/lib/chat-store';
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw, LoaderCircle } from 'lucide-react';
+import { Check, Copy, LoaderCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-interface MessageProps {
-  message: MessageType;
-  isLast?: boolean;
-}
-
-const animStyle: React.CSSProperties = {
-  animation: 'messageIn 0.4s ease forwards',
-};
-
-export function Message({ message, isLast }: MessageProps) {
-  const isUser = message.role === 'user';
+export function Message({ message }: { message: MessageType }) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current); }, []);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      setCopyFailed(false);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyFailed(true);
+    }
   };
 
-  if (isUser) {
+  if (message.role === 'user') {
     return (
-      <div className="py-8 px-4" style={animStyle}>
-        <div className="max-w-3xl mx-auto flex justify-end">
-          <div className="bg-user-bg rounded-2xl px-4 py-3 max-w-[80%]">
-            <div className="text-text break-words leading-relaxed prose prose-invert max-w-none">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-            </div>
-          </div>
-        </div>
-      </div>
+      <article className="message-row user-message" aria-label="You">
+        <div className="user-message-bubble"><div className="message-markdown"><ReactMarkdown>{message.content}</ReactMarkdown></div></div>
+      </article>
     );
   }
 
   return (
-    <div className="py-8 px-4" style={animStyle}>
-      <div className="max-w-3xl mx-auto">
-        <div className="flex-1 min-w-0">
-          <div className="text-text leading-relaxed prose prose-invert max-w-none">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
-            {message.isStreaming && !message.isThinking && message.content && (
-              <span className="inline-block w-1.5 h-5 ml-1 bg-primary animate-pulse align-middle" />
-            )}
-          </div>
-
-          {message.isStreaming && message.isThinking && (
-            <div role="status" aria-label="Claude is thinking" className="flex items-center gap-2 text-muted text-sm py-1">
-              <LoaderCircle aria-hidden="true" className="w-4 h-4 text-primary animate-spin motion-reduce:animate-none" />
-              <span>Thinking…</span>
-            </div>
-          )}
-
-          {!message.isStreaming && (
-            <div className="flex items-center gap-1 mt-4">
-              <button
-                onClick={handleCopy}
-                className="p-2 hover:bg-surface/50 rounded-md transition-colors group"
-                title={copied ? 'Copied!' : 'Copy'}
-              >
-                {copied ? (
-                  <span className="text-xs text-primary">Copied!</span>
-                ) : (
-                  <Copy className="w-4 h-4 text-muted group-hover:text-text" />
-                )}
-              </button>
-              <button className="p-2 hover:bg-surface/50 rounded-md transition-colors group" title="Good response">
-                <ThumbsUp className="w-4 h-4 text-muted group-hover:text-text" />
-              </button>
-              <button className="p-2 hover:bg-surface/50 rounded-md transition-colors group" title="Bad response">
-                <ThumbsDown className="w-4 h-4 text-muted group-hover:text-text" />
-              </button>
-              <button className="p-2 hover:bg-surface/50 rounded-md transition-colors group ml-2" title="Retry">
-                <span className="text-sm text-muted group-hover:text-text flex items-center gap-1">
-                  Retry <RotateCcw className="w-3 h-3" />
-                </span>
-              </button>
-            </div>
-          )}
+    <article className={`message-row assistant-message${message.isError ? ' has-error' : ''}`} aria-label="Claude">
+      {message.content && (
+        <div className="assistant-text" data-streaming={message.isStreaming && !message.isThinking}>
+          <div className="message-markdown"><ReactMarkdown>{message.content}</ReactMarkdown></div>
         </div>
-
-        {!message.isStreaming && isLast && (
-          <div className="mt-4 text-xs text-muted/70 text-center">
-            Claude can make mistakes. Please double-check responses.
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+      {message.isStreaming && message.isThinking && (
+        <div role="status" aria-label="Claude is thinking" className="thinking-status">
+          <span className="animate-spin motion-reduce:animate-none"><LoaderCircle size={17} aria-hidden="true" /></span>
+          <span>Thinking…</span>
+        </div>
+      )}
+      {!message.isStreaming && message.content && (
+        <div className="message-actions">
+          <button type="button" onClick={handleCopy} className="message-copy" title={copied ? 'Copied!' : 'Copy response'} aria-label={copied ? 'Copied!' : 'Copy response'}>
+            {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+          </button>
+          <span role="status" className="copy-status">{copied ? 'Copied' : copyFailed ? 'Could not copy. Please select the text.' : ''}</span>
+        </div>
+      )}
+    </article>
   );
 }

@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useChatStore } from '@/lib/chat-store';
 import { MessageList } from './chat/MessageList';
 import { ChatInput } from './chat/ChatInput';
 import { readChatEvents } from '@/lib/chat-stream';
-import { Trash2 } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 
 export function ChatInterface() {
   const { messages, addMessage, updateMessage, clearMessages, isLoading, setLoading } =
@@ -141,34 +142,50 @@ export function ChatInterface() {
     }
   };
 
+  const hasMessages = messages.length > 0;
+
   return (
-    <div className="fixed inset-0 bg-bg flex flex-col">
-      {/* Minimal Header */}
-      <div className="border-b border-border/20 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted">Claude Builder Club @ NJIT</span>
+    <div className="chat-app">
+      <header className="chat-header">
+        <div className="brand-lockup">
+          <span className="brand-name">Claude</span>
+          <span className="brand-divider" aria-hidden="true" />
+          <span className="brand-club">Builder Club <span className="brand-campus">@ NJIT</span></span>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (!hasMessages || confirm('Start a new chat? This will clear the current conversation.')) clearMessages();
+          }}
+          disabled={isLoading || !hasMessages}
+          className="new-chat-button"
+          title="New chat"
+          aria-label="New chat"
+        >
+          <SquarePen size={18} aria-hidden="true" />
+          <span>New chat</span>
+        </button>
+      </header>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              if (confirm('Clear all messages?')) {
-                clearMessages();
-              }
-            }}
-            className="p-2 hover:bg-surface/30 rounded-lg transition-colors text-muted hover:text-text"
-            title="Clear chat"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <MessageList />
-
-      {/* Input */}
-      <ChatInput onSend={sendMessage} disabled={isLoading} />
+      <main className={hasMessages ? 'conversation-view' : 'welcome-view'}>
+        {!hasMessages ? (
+          <div className="welcome-content">
+            <h1 className="welcome-heading">
+              <Image src="/claude-ai.png" width={48} height={48} alt="" priority />
+              <span>You’re here!</span>
+            </h1>
+            <ChatInput onSend={sendMessage} disabled={isLoading} />
+          </div>
+        ) : (
+          <>
+            <MessageList />
+            <div className="conversation-composer">
+              <ChatInput onSend={sendMessage} disabled={isLoading} />
+              <p className="chat-disclaimer">Claude can make mistakes. Please double-check responses.</p>
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }
