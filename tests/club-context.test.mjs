@@ -43,7 +43,7 @@ test('published data contains no internal operational fields or private form lin
 test('policy uses New Jersey dates and labels stale context as last confirmed', () => {
   const system=getSystemMessage(new Date('2026-10-15T02:00:00Z'));
   assert.match(system,/Wednesday, October 14, 2026/);
-  assert.match(system,/Do not use emojis or em dashes/);
+  assert.match(system,/Do not use emojis, em dashes/);
   assert.match(system,/no live web search/i);
   const stale=getSystemMessage(new Date('2027-02-01T15:00:00Z'));
   assert.match(stale,/more than 90 days old/);
