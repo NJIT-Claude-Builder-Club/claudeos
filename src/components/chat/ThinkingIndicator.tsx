@@ -28,7 +28,7 @@ export function ThinkingIndicator() {
     <div role="status" className="thinking-status">
       <span className="sr-only">Claude is thinking</span>
       <span className="thinking-mark" aria-hidden="true">
-        <Image className="thinking-animated" src="/claude-thinking.gif" width={28} height={28} alt="" unoptimized />
+        <Image className="thinking-animated" src="/claude-thinking-v2.gif" width={28} height={28} alt="" unoptimized />
         <Image className="thinking-still" src="/claude-ai.png" width={28} height={28} alt="" />
       </span>
       <span aria-hidden="true" className="thinking-label">{labels[label]}</span>
