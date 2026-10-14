@@ -8,9 +8,11 @@ import { ChatInput } from './chat/ChatInput';
 import { readChatEvents } from '@/lib/chat-stream';
 import { TimeGreeting } from './TimeGreeting';
 import { createTextSmoother } from '@/lib/chat-presentation';
+import { useKeyboardViewport } from '@/lib/use-keyboard-viewport';
 import { SquarePen } from 'lucide-react';
 
 export function ChatInterface() {
+  const viewportRef = useKeyboardViewport();
   const { messages, addMessage, updateMessage, clearMessages, isLoading, setLoading } =
     useChatStore();
 
@@ -156,7 +158,7 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="chat-app">
+    <div ref={viewportRef} className="chat-app">
       <header className="chat-header">
         <div className="brand-lockup">
           <span className="brand-name">CBC @ NJIT</span>

@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState, memo } from 'react';
 import { Message as MessageType } from '@/lib/chat-store';
-import { Check, Copy, LoaderCircle } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { ThinkingIndicator } from './ThinkingIndicator';
 
 export const Message = memo(function Message({ message }: { message: MessageType }) {
   const [copied, setCopied] = useState(false);
@@ -39,10 +40,7 @@ export const Message = memo(function Message({ message }: { message: MessageType
         </div>
       )}
       {message.isStreaming && message.isThinking && (
-        <div role="status" aria-label="Claude is thinking" className="thinking-status">
-          <span className="animate-spin motion-reduce:animate-none"><LoaderCircle size={17} aria-hidden="true" /></span>
-          <span>Thinking…</span>
-        </div>
+        <ThinkingIndicator />
       )}
       {!message.isStreaming && message.content && (
         <div className="message-actions">

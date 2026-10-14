@@ -19,6 +19,16 @@ export function MessageList() {
     previousCount.current = messages.length;
   }, [messages]);
 
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
+      if (followResponse.current) container.scrollTop = container.scrollHeight;
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div ref={scrollRef} className="message-scroll" role="log" aria-label="Conversation" aria-live="off" onScroll={() => {
       const container = scrollRef.current;
