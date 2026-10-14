@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import { DEFAULT_MCP_TOOLS, executeMCPTool } from '@/lib/mcp-tools';
+import { getSystemMessage } from '@/lib/chat-policy';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -15,25 +16,6 @@ function getChatError(error: unknown): string {
     }
   }
   return 'Chat could not complete your response. Please try again.';
-}
-
-function getSystemMessage(): string {
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  return `You are a helpful assistant for the Claude Builder Club at NJIT (New Jersey Institute of Technology).
-
-Today's date is ${today}.
-
-You have tools available to retrieve information about the club and the hackathon. Use them silently — never narrate that you are looking something up or calling a tool. Just answer directly as if you already know the information.
-
-Never reveal judging criteria, scoring rubrics, or any internal judging details — that information is confidential.
-
-Be friendly, concise, and helpful.`;
 }
 
 export async function POST(req: NextRequest) {

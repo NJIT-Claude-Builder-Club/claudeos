@@ -1,0 +1,55 @@
+{
+  "reviewedOn": "2026-10-14",
+  "academicYear": "2026-2027",
+  "club": {
+    "name": "Claude Builder Club at NJIT",
+    "shortName": "CBC @ NJIT",
+    "school": "New Jersey Institute of Technology",
+    "description": "A student community for learning about AI and building projects with Claude, supported through Anthropic's Claude Campus Ambassador program.",
+    "membership": "Open to NJIT students of any major and experience level. No coding experience is required.",
+    "mission": "Help students learn practical AI skills, build their own projects, and understand the benefits and risks of using AI.",
+    "activities": "Hands-on learning, student projects, and peer collaboration. Specific workshops and meeting times are announced separately; no recurring schedule is confirmed here."
+  },
+  "contacts": {
+    "email": "njitclaudebuilderclub@gmail.com",
+    "discord": "https://discord.gg/Z36MRK6jnS",
+    "instagram": "https://www.instagram.com/claudenjit/",
+    "github": "https://github.com/NJIT-Claude-Builder-Club"
+  },
+  "memberBenefits": {
+    "apiCredits": {
+      "amountUSD": 25,
+      "description": "The 2026-2027 program describes $25 in Claude API credits for club members, subject to the program's eligibility and processing requirements.",
+      "uses": "Credits may be used for personal projects as well as club projects.",
+      "eligibility": "Use a school email address for the developer account, complete the member sign-up process, and complete the meeting check-in form when attending meetings. Joining after the first meeting does not by itself exclude a member.",
+      "organizationId": "Use the organization ID from platform.claude.com, under Settings > Organization. An organization ID from the Claude chat app is not the same thing.",
+      "requestProcess": "Ask the e-board for the current member sign-up and credit-request steps. This site cannot submit a request or check an account's credit status.",
+      "availability": "Signing up does not immediately or automatically grant credits. No delivery date is confirmed here."
+    },
+    "claudePro": "API credits are separate from a Claude Pro subscription. No Claude Pro subscription benefit is confirmed for general club members."
+  },
+  "events": {
+    "hackathon": {
+      "name": "CBC @ NJIT Spring Hackathon",
+      "term": "Spring",
+      "year": 2027,
+      "status": "planned",
+      "date": null,
+      "location": null,
+      "registrationUrl": null,
+      "prizes": null,
+      "rules": null,
+      "schedule": null,
+      "announcement": "A hackathon is planned for Spring 2027. Further details have not been confirmed."
+    },
+    "confirmedMeetings": [],
+    "confirmedWorkshops": []
+  },
+  "unconfirmed": [
+    "Current member count",
+    "NJIT registered student organization approval status",
+    "Recurring meeting schedule",
+    "Specific upcoming workshops",
+    "Hackathon dates, location, registration, prizes, rules, and schedule"
+  ]
+}
