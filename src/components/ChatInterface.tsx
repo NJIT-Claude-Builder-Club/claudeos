@@ -21,6 +21,9 @@ export function ChatInterface() {
     });
 
     setLoading(true);
+    assistantMessageId = addMessage({
+      role: 'assistant', content: '', isStreaming: true, isThinking: true, toolsUsed: [],
+    });
 
     try {
       // Prepare messages for API
@@ -104,13 +107,15 @@ export function ChatInterface() {
       for await (const data of readChatEvents(response.body)) {
         if (data.type === 'error') throw new Error(data.error);
         if (data.type === 'message_start' && !assistantMessageId) {
-          assistantMessageId = addMessage({ role: 'assistant', content: '', isStreaming: true, toolsUsed: [] });
+          assistantMessageId = addMessage({ role: 'assistant', content: '', isStreaming: true, isThinking: true, toolsUsed: [] });
+        } else if (data.type === 'thinking') {
+          if (assistantMessageId) updateMessage(assistantMessageId, { isThinking: true });
         } else if (data.type === 'content_block_delta' && data.delta.type === 'text_delta') {
           currentContent += data.delta.text;
-          if (assistantMessageId) updateMessage(assistantMessageId, { content: currentContent });
+          if (assistantMessageId) updateMessage(assistantMessageId, { content: currentContent, isThinking: false });
         } else if (data.type === 'tool_use') {
           toolsUsed.push(data.tool_use);
-          if (assistantMessageId) updateMessage(assistantMessageId, { toolsUsed: [...toolsUsed] });
+          if (assistantMessageId) updateMessage(assistantMessageId, { toolsUsed: [...toolsUsed], isThinking: true });
         } else if (data.type === 'tool_result') {
           const tool = toolsUsed.find((item) => item.id === data.tool_use_id);
           if (tool) tool.result = data.result;
@@ -122,12 +127,12 @@ export function ChatInterface() {
       if (!completed || !currentContent.trim()) {
         throw new Error('Chat returned an incomplete response. Please try again.');
       }
-      if (assistantMessageId) updateMessage(assistantMessageId, { isStreaming: false });
+      if (assistantMessageId) updateMessage(assistantMessageId, { isStreaming: false, isThinking: false });
     } catch (error) {
       console.error('Error sending message:', error);
       const content = error instanceof Error ? error.message : 'Chat could not complete your response. Please try again.';
       if (assistantMessageId) {
-        updateMessage(assistantMessageId, { content, isStreaming: false, isError: true });
+        updateMessage(assistantMessageId, { content, isStreaming: false, isThinking: false, isError: true });
       } else {
         addMessage({ role: 'assistant', content, isError: true });
       }

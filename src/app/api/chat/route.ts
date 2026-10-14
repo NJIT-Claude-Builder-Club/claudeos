@@ -69,19 +69,22 @@ export async function POST(req: NextRequest) {
         send({ type: 'message_start' });
         // Bound tool calls so an unexpected tool loop cannot run indefinitely.
         for (let round = 0; round < 8; round++) {
-          const response = await anthropic.messages.create({
+          send({ type: 'thinking' });
+          const stream = anthropic.messages.stream({
             model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
             max_tokens: 4096,
             system: getSystemMessage(),
             messages: conversationMessages,
             tools: DEFAULT_MCP_TOOLS,
           }, { signal: req.signal });
+          stream.on('text', (text) => {
+            send({ type: 'content_block_delta', delta: { type: 'text_delta', text } });
+          });
+          const response = await stream.finalMessage();
           if (cancelled) return;
           const toolResults: Anthropic.ToolResultBlockParam[] = [];
           for (const block of response.content) {
-            if (block.type === 'text') {
-              send({ type: 'content_block_delta', delta: { type: 'text_delta', text: block.text } });
-            } else if (block.type === 'tool_use') {
+            if (block.type === 'tool_use') {
               send({ type: 'tool_use', tool_use: block });
               const result = await executeMCPTool(block.name, block.input as Record<string, unknown>);
               toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });

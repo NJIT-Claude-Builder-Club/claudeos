@@ -20,6 +20,7 @@ export interface Message {
   toolResults?: ToolResult[];
   toolsUsed?: Array<{ name: string; input: unknown; result?: unknown }>;
   isStreaming?: boolean;
+  isThinking?: boolean;
   isError?: boolean;
 }
 

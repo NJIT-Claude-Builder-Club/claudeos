@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Message as MessageType } from '@/lib/chat-store';
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, RotateCcw, LoaderCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MessageProps {
@@ -44,10 +44,17 @@ export function Message({ message, isLast }: MessageProps) {
         <div className="flex-1 min-w-0">
           <div className="text-text leading-relaxed prose prose-invert max-w-none">
             <ReactMarkdown>{message.content}</ReactMarkdown>
-            {message.isStreaming && message.content && (
+            {message.isStreaming && !message.isThinking && message.content && (
               <span className="inline-block w-1.5 h-5 ml-1 bg-primary animate-pulse align-middle" />
             )}
           </div>
+
+          {message.isStreaming && message.isThinking && (
+            <div role="status" aria-label="Claude is thinking" className="flex items-center gap-2 text-muted text-sm py-1">
+              <LoaderCircle aria-hidden="true" className="w-4 h-4 text-primary animate-spin motion-reduce:animate-none" />
+              <span>Thinking…</span>
+            </div>
+          )}
 
           {!message.isStreaming && (
             <div className="flex items-center gap-1 mt-4">

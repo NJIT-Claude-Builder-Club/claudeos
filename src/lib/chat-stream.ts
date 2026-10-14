@@ -1,5 +1,6 @@
 export type ChatEvent =
   | { type: 'message_start' }
+  | { type: 'thinking' }
   | { type: 'content_block_delta'; delta: { type: 'text_delta'; text: string } }
   | { type: 'tool_use'; tool_use: { id: string; name: string; input: Record<string, unknown> } }
   | { type: 'tool_result'; tool_use_id: string; result: unknown }
