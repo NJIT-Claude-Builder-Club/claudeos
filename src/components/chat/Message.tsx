@@ -34,7 +34,7 @@ export const Message = memo(function Message({ message }: { message: MessageType
   return (
     <article className={`message-row assistant-message${message.isError ? ' has-error' : ''}`} aria-label="Claude">
       {message.content && (
-        <div className="assistant-text" data-streaming={message.isStreaming && !message.isThinking}>
+        <div className="assistant-text">
           <div className="message-markdown"><ReactMarkdown>{message.content}</ReactMarkdown></div>
         </div>
       )}
