@@ -4,6 +4,7 @@ import React from 'react';
 import { useChatStore } from '@/lib/chat-store';
 import { MessageList } from './chat/MessageList';
 import { ChatInput } from './chat/ChatInput';
+import { readChatEvents } from '@/lib/chat-stream';
 import { Trash2 } from 'lucide-react';
 
 export function ChatInterface() {
@@ -11,6 +12,8 @@ export function ChatInterface() {
     useChatStore();
 
   const sendMessage = async (content: string, images?: string[]) => {
+    if (isLoading) return;
+    let assistantMessageId: string | null = null;
     // Add user message
     addMessage({
       role: 'user',
@@ -28,7 +31,7 @@ export function ChatInterface() {
             | { type: 'text'; text: string }
           >;
 
-      const apiMessages: Array<{ role: string; content: MessageContent }> = messages.map(
+      const apiMessages: Array<{ role: string; content: MessageContent }> = messages.filter((msg) => !msg.isError).map(
         (msg) => ({
           role: msg.role,
           content: msg.content,
@@ -90,99 +93,44 @@ export function ChatInterface() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || 'Chat is temporarily unavailable. Please try again.');
       }
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error('No reader available');
-      }
-
-      let assistantMessageId: string | null = null;
+      if (!response.body) throw new Error('Chat returned an empty response. Please try again.');
       let currentContent = '';
-      let toolsUsed: Array<{ name: string; input: unknown; result?: unknown }> = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              // Handle different event types
-              if (data.type === 'message_start') {
-                // Only create a new message if we don't have one yet
-                // (prevents duplicate messages when tools are used)
-                if (!assistantMessageId) {
-                  assistantMessageId = addMessage({
-                    role: 'assistant',
-                    content: '',
-                    isStreaming: true,
-                    toolsUsed: [],
-                  });
-                }
-              } else if (data.type === 'content_block_delta') {
-                if (data.delta?.type === 'text_delta') {
-                  currentContent += data.delta.text;
-                  if (assistantMessageId) {
-                    updateMessage(assistantMessageId, {
-                      content: currentContent,
-                      isStreaming: true,
-                    });
-                  }
-                }
-              } else if (data.type === 'tool_use') {
-                // Claude is using a tool
-                const toolUse = data.tool_use;
-                toolsUsed.push({
-                  name: toolUse.name,
-                  input: toolUse.input,
-                });
-                if (assistantMessageId) {
-                  updateMessage(assistantMessageId, {
-                    toolsUsed: [...toolsUsed],
-                  });
-                }
-              } else if (data.type === 'tool_result') {
-                // Tool execution result
-                const lastTool = toolsUsed[toolsUsed.length - 1];
-                if (lastTool) {
-                  lastTool.result = data.result;
-                  if (assistantMessageId) {
-                    updateMessage(assistantMessageId, {
-                      toolsUsed: [...toolsUsed],
-                    });
-                  }
-                }
-              } else if (data.type === 'message_stop') {
-                if (assistantMessageId) {
-                  updateMessage(assistantMessageId, {
-                    isStreaming: false,
-                  });
-                }
-                // Reset for next iteration
-                currentContent = '';
-                toolsUsed = [];
-              }
-            } catch (e) {
-              console.error('Error parsing event:', e);
-            }
-          }
+      const toolsUsed: Array<{ id: string; name: string; input: unknown; result?: unknown }> = [];
+      let completed = false;
+      for await (const data of readChatEvents(response.body)) {
+        if (data.type === 'error') throw new Error(data.error);
+        if (data.type === 'message_start' && !assistantMessageId) {
+          assistantMessageId = addMessage({ role: 'assistant', content: '', isStreaming: true, toolsUsed: [] });
+        } else if (data.type === 'content_block_delta' && data.delta.type === 'text_delta') {
+          currentContent += data.delta.text;
+          if (assistantMessageId) updateMessage(assistantMessageId, { content: currentContent });
+        } else if (data.type === 'tool_use') {
+          toolsUsed.push(data.tool_use);
+          if (assistantMessageId) updateMessage(assistantMessageId, { toolsUsed: [...toolsUsed] });
+        } else if (data.type === 'tool_result') {
+          const tool = toolsUsed.find((item) => item.id === data.tool_use_id);
+          if (tool) tool.result = data.result;
+          if (assistantMessageId) updateMessage(assistantMessageId, { toolsUsed: [...toolsUsed] });
+        } else if (data.type === 'message_stop') {
+          completed = true;
         }
       }
+      if (!completed || !currentContent.trim()) {
+        throw new Error('Chat returned an incomplete response. Please try again.');
+      }
+      if (assistantMessageId) updateMessage(assistantMessageId, { isStreaming: false });
     } catch (error) {
       console.error('Error sending message:', error);
-      addMessage({
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-      });
+      const content = error instanceof Error ? error.message : 'Chat could not complete your response. Please try again.';
+      if (assistantMessageId) {
+        updateMessage(assistantMessageId, { content, isStreaming: false, isError: true });
+      } else {
+        addMessage({ role: 'assistant', content, isError: true });
+      }
     } finally {
       setLoading(false);
     }

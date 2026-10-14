@@ -38,6 +38,8 @@ npm install
 Create a `.env.local` file in the root directory:
 ```bash
 ANTHROPIC_API_KEY=your-api-key-here
+# Optional: override the supported default model (claude-sonnet-4-6).
+ANTHROPIC_MODEL=claude-sonnet-4-6
 ```
 
 To get an API key:
@@ -57,6 +59,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the chat simulator.
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm test` - Test chat stream parsing (Node.js 22.6+ with type stripping)
 
 ## 🏗️ Architecture
 
@@ -87,10 +90,10 @@ src/
 
 ### API Route
 The `/api/chat` endpoint:
-- Uses Edge Runtime for optimal performance
+- Uses the Node.js runtime with a 60-second execution limit
 - Streams responses from Claude API
 - Handles tool calling and execution
-- Returns Server-Sent Events (SSE) for real-time updates
+- Returns Server-Sent Events (SSE) with explicit completion and error events
 
 ## 🎨 Design System
 

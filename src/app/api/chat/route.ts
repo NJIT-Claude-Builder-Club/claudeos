@@ -1,15 +1,21 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
-import { DEFAULT_MCP_TOOLS, executeMCPTool, getAllTools } from '@/lib/mcp-tools';
+import { DEFAULT_MCP_TOOLS, executeMCPTool } from '@/lib/mcp-tools';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
-// Note: Edge runtime doesn't support stdio child processes
-// To use real MCP servers with stdio transport, switch to nodejs runtime
-// and configure MCP_SERVERS in src/lib/mcp-client.ts
-export const runtime = 'edge';
+function getChatError(error: unknown): string {
+  if (error instanceof Anthropic.APIError) {
+    if (error.status === 401 || error.status === 403) {
+      return 'Chat is temporarily unavailable because its API credentials need attention.';
+    }
+    if (error.status === 429) {
+      return 'Chat is busy right now. Please try again shortly.';
+    }
+  }
+  return 'Chat could not complete your response. Please try again.';
+}
 
 function getSystemMessage(): string {
   const today = new Date().toLocaleDateString('en-US', {
@@ -31,145 +37,81 @@ Be friendly, concise, and helpful.`;
 }
 
 export async function POST(req: NextRequest) {
+  let messages: Anthropic.MessageParam[];
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
+    if (!Array.isArray(body.messages) || body.messages.length === 0 ||
+        body.messages.some((message: Anthropic.MessageParam) =>
+          !message || !['user', 'assistant'].includes(message.role) ||
+          !(typeof message.content === 'string' || Array.isArray(message.content)))) {
+      return Response.json({ error: 'Please send a valid conversation.' }, { status: 400 });
+    }
+    messages = body.messages;
+  } catch {
+    return Response.json({ error: 'Please send valid JSON.' }, { status: 400 });
+  }
 
-    const encoder = new TextEncoder();
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          let conversationMessages = [...messages];
-          let continueLoop = true;
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('Chat configuration error: ANTHROPIC_API_KEY is missing');
+    return Response.json({ error: 'Chat is temporarily unavailable. Please try again later.' }, { status: 503 });
+  }
 
-          while (continueLoop) {
-            // Call Claude with tools enabled
-            const response = await anthropic.messages.create({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 4096,
-              system: getSystemMessage(),
-              messages: conversationMessages,
-              tools: DEFAULT_MCP_TOOLS,
-            });
-
-            // Send message_start event
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ type: 'message_start', message: response })}\n\n`
-              )
-            );
-
-            // Check if Claude wants to use tools
-            const toolUseBlocks = response.content.filter(
-              (block) => block.type === 'tool_use'
-            );
-
-            if (toolUseBlocks.length > 0) {
-              // Send tool use events to frontend
-              for (const block of response.content) {
-                if (block.type === 'text') {
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({
-                        type: 'content_block_delta',
-                        delta: { type: 'text_delta', text: block.text },
-                      })}\n\n`
-                    )
-                  );
-                } else if (block.type === 'tool_use') {
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({
-                        type: 'tool_use',
-                        tool_use: block,
-                      })}\n\n`
-                    )
-                  );
-                }
-              }
-
-              // Execute all tools
-              const toolResults = [];
-              for (const toolBlock of toolUseBlocks) {
-                if (toolBlock.type === 'tool_use') {
-                  const result = await executeMCPTool(
-                    toolBlock.name,
-                    toolBlock.input as Record<string, unknown>
-                  );
-                  toolResults.push({
-                    type: 'tool_result' as const,
-                    tool_use_id: toolBlock.id,
-                    content: JSON.stringify(result),
-                  });
-
-                  // Send tool result event to frontend
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({
-                        type: 'tool_result',
-                        tool_use_id: toolBlock.id,
-                        result,
-                      })}\n\n`
-                    )
-                  );
-                }
-              }
-
-              // Add assistant message and tool results to conversation
-              conversationMessages.push({
-                role: 'assistant',
-                content: response.content,
-              });
-              conversationMessages.push({
-                role: 'user',
-                content: toolResults,
-              });
-
-              // Continue loop to get Claude's final response
-            } else {
-              // No tool use, send final response
-              for (const block of response.content) {
-                if (block.type === 'text') {
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({
-                        type: 'content_block_delta',
-                        delta: { type: 'text_delta', text: block.text },
-                      })}\n\n`
-                    )
-                  );
-                }
-              }
-
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ type: 'message_stop' })}\n\n`)
-              );
-              continueLoop = false;
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const encoder = new TextEncoder();
+  let cancelled = false;
+  const readable = new ReadableStream({
+    async start(controller) {
+      const send = (event: Record<string, unknown>) => {
+        if (!cancelled) controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+      };
+      try {
+        const conversationMessages = [...messages];
+        send({ type: 'message_start' });
+        // Bound tool calls so an unexpected tool loop cannot run indefinitely.
+        for (let round = 0; round < 8; round++) {
+          const response = await anthropic.messages.create({
+            model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+            max_tokens: 4096,
+            system: getSystemMessage(),
+            messages: conversationMessages,
+            tools: DEFAULT_MCP_TOOLS,
+          }, { signal: req.signal });
+          if (cancelled) return;
+          const toolResults: Anthropic.ToolResultBlockParam[] = [];
+          for (const block of response.content) {
+            if (block.type === 'text') {
+              send({ type: 'content_block_delta', delta: { type: 'text_delta', text: block.text } });
+            } else if (block.type === 'tool_use') {
+              send({ type: 'tool_use', tool_use: block });
+              const result = await executeMCPTool(block.name, block.input as Record<string, unknown>);
+              toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });
+              send({ type: 'tool_result', tool_use_id: block.id, result });
             }
           }
-
-          controller.close();
-        } catch (error) {
-          console.error('Stream error:', error);
-          controller.error(error);
+          if (toolResults.length === 0) {
+            send({ type: 'message_stop' });
+            return;
+          }
+          conversationMessages.push({ role: 'assistant', content: response.content });
+          conversationMessages.push({ role: 'user', content: toolResults });
         }
-      },
-    });
-
-    return new Response(readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
-  } catch (error) {
-    console.error('API error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to process chat request' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        throw new Error('Chat exceeded the tool-call limit');
+      } catch (error) {
+        // Keep provider details in server logs, not in public responses.
+        console.error('Chat request failed:', error);
+        send({ type: 'error', error: getChatError(error) });
+      } finally {
+        if (!cancelled) controller.close();
       }
-    );
-  }
+    },
+    cancel() { cancelled = true; },
+  });
+
+  return new Response(readable, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }
